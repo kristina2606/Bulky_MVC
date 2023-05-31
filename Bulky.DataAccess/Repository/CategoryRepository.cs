@@ -1,7 +1,6 @@
 ﻿using Bulky.DataAccess.Data;
 using Bulky.DataAccess.Repository.IRepository;
 using Bulky.Models;
-using System.Linq.Expressions;
 
 namespace Bulky.DataAccess.Repository
 {
