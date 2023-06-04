@@ -35,8 +35,8 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
                 }),
                 Product = new Product()
             };
-            
-            if(id==null || id==0)
+
+            if (id == null || id == 0)
             {
                 return View(productVM);
             }
@@ -52,12 +52,22 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
             if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
-                if(file !=null)
-                { 
+                if (file != null)
+                {
                     string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
                     string productPath = Path.Combine(wwwRootPath, @"images\product");
 
-                    using(var fs = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
+                    if (!string.IsNullOrEmpty(productVM.Product.ImageUrl))
+                    {
+                        var oldImage = Path.Combine(wwwRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
+                        
+                        if (System.IO.File.Exists(oldImage))
+                        {
+                            System.IO.File.Delete(oldImage);
+                        }
+                    }
+
+                    using (var fs = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
                     {
                         file.CopyTo(fs);
                     }
@@ -65,7 +75,14 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
                     productVM.Product.ImageUrl = @"\images\product\" + fileName;
                 }
 
-                _unitOfWork.Product.Add(productVM.Product);
+                if(productVM.Product.Id==0)
+                {
+                    _unitOfWork.Product.Add(productVM.Product);
+                }
+                else
+                {
+                    _unitOfWork.Product.Update(productVM.Product);
+                }
                 _unitOfWork.Save();
                 TempData["success"] = "Product created successfully";
                 return RedirectToAction("Index");
