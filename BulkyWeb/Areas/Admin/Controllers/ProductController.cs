@@ -10,7 +10,7 @@ using System.Data;
 namespace BulkyBookWeb.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)] 
+    //[Authorize(Roles = SD.Role_Admin)] 
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -52,6 +52,8 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult Upsert(ProductVM productVM, IFormFile? file)
         {
+            var message = "Company created successfully";
+
             if (ModelState.IsValid)
             {
                 string wwwRootPath = _webHostEnvironment.WebRootPath;
@@ -85,9 +87,10 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
                 else
                 {
                     _unitOfWork.Product.Update(productVM.Product);
+                    message = "Company updated successfully";
                 }
                 _unitOfWork.Save();
-                TempData["success"] = "Product created successfully";
+                TempData["success"] = message;
                 return RedirectToAction("Index");
             }
             else
