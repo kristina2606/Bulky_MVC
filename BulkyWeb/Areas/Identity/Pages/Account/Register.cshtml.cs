@@ -173,6 +173,11 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 user.PhoneNumber = Input.PhoneNumber;
                 var result = await _userManager.CreateAsync(user, Input.Password);
 
+                if(Input.Role == SD.Role_Company)
+                {
+                    user.CompanyId=Input.CompanyId;
+                }
+
                 if (result.Succeeded)
                 {
                     _logger.LogInformation("User created a new account with password.");
