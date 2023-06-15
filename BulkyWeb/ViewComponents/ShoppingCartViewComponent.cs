@@ -5,10 +5,10 @@ using System.Security.Claims;
 
 namespace BulkyBookWeb.ViewComponents
 {
-    public class ShoppingCartViewComponents : ViewComponent
+    public class ShoppingCartViewComponent : ViewComponent
     {
         private readonly IUnitOfWork _unitOfWork;
-        public ShoppingCartViewComponents(IUnitOfWork unitOfWork)
+        public ShoppingCartViewComponent(IUnitOfWork unitOfWork)
         {
             _unitOfWork = unitOfWork;
         }
