@@ -88,7 +88,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
             public string Email { get; set; }
 
             [Required]
-            public string? Name { get; set; }
+            public string Name { get; set; }
             public string? StreetAddress { get; set; }
             public string? City { get; set; }
             public string? State { get; set; }
@@ -171,6 +171,7 @@ namespace BulkyBookWeb.Areas.Identity.Pages.Account
                 user.City = Input.City;
                 user.State = Input.State;
                 user.PostalCode = Input.PostalCode;
+                user.Name = Input.Name;
                 user.PhoneNumber = Input.PhoneNumber;
 
                 var result = await _userManager.CreateAsync(user);
