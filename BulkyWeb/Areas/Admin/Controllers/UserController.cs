@@ -15,13 +15,15 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
     [Authorize(Roles = SD.Role_Admin)]
     public class UserController : Controller
     {
-        private readonly ApplicationDbContext _db;
+        private readonly IUnitOfWork _unitOfWork;
         private readonly UserManager<ApplicationUser> _userManager;
+        private readonly RoleManager<IdentityRole> _roleManager;
 
-        public UserController(ApplicationDbContext db, UserManager<ApplicationUser> userManager)
+        public UserController(IUnitOfWork unitOfWork, UserManager<ApplicationUser> userManager, RoleManager<IdentityRole> roleManager)
         {
-            _db = db;
+            _unitOfWork = unitOfWork;
             _userManager = userManager;
+            _roleManager = roleManager;
         }
         public IActionResult Index()
         {
@@ -30,24 +32,22 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
 
         public IActionResult RoleManagment(string userId)
         {
-            string roleId = _db.UserRoles.FirstOrDefault(u => u.UserId == userId).RoleId;
-
             RoleManagmentVM roleManagmentVM = new()
             {
-                ApplicationUser = _db.ApplicationUsers.Include(u => u.Company).FirstOrDefault(u => u.Id == userId),
-                RoleList = _db.Roles.Select(u => new SelectListItem
+                ApplicationUser = _unitOfWork.ApplicationUser.Get(u => u.Id == userId, includeProperties: "Company"),
+                RoleList = _roleManager.Roles.Select(u => new SelectListItem
                 {
                     Text = u.Name,
                     Value = u.Name
                 }),
-                CompanyList = _db.Companies.Select(u => new SelectListItem
+                CompanyList = _unitOfWork.Company.GetAll().Select(u => new SelectListItem
                 {
-                    Text= u.Name,
+                    Text = u.Name,
                     Value = u.Id.ToString()
                 }),
             };
-
-            roleManagmentVM.ApplicationUser.Role = _db.Roles.FirstOrDefault(u => u.Id == roleId).Name;
+            
+            roleManagmentVM.ApplicationUser.Role = _userManager.GetRolesAsync(_unitOfWork.ApplicationUser.Get(u=>u.Id==userId)).GetAwaiter().GetResult().FirstOrDefault();
 
             return View(roleManagmentVM);
         }
@@ -55,26 +55,38 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult RoleManagment(RoleManagmentVM roleManagmentVM)
         {
-            string roleId = _db.UserRoles.FirstOrDefault(u => u.UserId == roleManagmentVM.ApplicationUser.Id).RoleId;
-            string oldRole = _db.Roles.FirstOrDefault(u => u.Id == roleId).Name;
+            string oldRole = _userManager.GetRolesAsync(_unitOfWork.ApplicationUser.Get(u => u.Id == roleManagmentVM.ApplicationUser.Id)).GetAwaiter().GetResult().FirstOrDefault();
 
-            if(roleManagmentVM.ApplicationUser.Role !=  oldRole)
+            ApplicationUser user = _unitOfWork.ApplicationUser.Get(u=>u.Id == roleManagmentVM.ApplicationUser.Id);
+
+            if (roleManagmentVM.ApplicationUser.Role != oldRole)
             {
-                ApplicationUser user = _db.ApplicationUsers.FirstOrDefault(u => u.Id == roleManagmentVM.ApplicationUser.Id);
                 if (roleManagmentVM.ApplicationUser.Role == SD.Role_Company)
                 {
                     user.CompanyId = roleManagmentVM.ApplicationUser.CompanyId;
                 }
-                if(oldRole==SD.Role_Company)
+                if (oldRole == SD.Role_Company)
                 {
                     user.CompanyId = null;
                 }
-                _db.SaveChanges();
+
+                _unitOfWork.ApplicationUser.Update(user);
+                _unitOfWork.Save();
 
                 _userManager.RemoveFromRoleAsync(user, oldRole).GetAwaiter().GetResult();
                 _userManager.AddToRoleAsync(user, roleManagmentVM.ApplicationUser.Role).GetAwaiter().GetResult();
 
             }
+            else
+            {
+                if(oldRole == SD.Role_Company && user.CompanyId!=roleManagmentVM.ApplicationUser.CompanyId)
+                {
+                    user.CompanyId = roleManagmentVM.ApplicationUser.CompanyId;
+                    _unitOfWork.ApplicationUser.Update(user);
+                    _unitOfWork.Save();
+                }
+            }
+
 
             return RedirectToAction(nameof(Index));
         }
@@ -83,15 +95,11 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
         [HttpGet]
         public IActionResult GetAll()
         {
-            List<ApplicationUser> objUserList = _db.ApplicationUsers.Include(u => u.Company).ToList();
-
-            var userRoles = _db.UserRoles.ToList();
-            var roles = _db.Roles.ToList();
+            List<ApplicationUser> objUserList = _unitOfWork.ApplicationUser.GetAll(includeProperties:"Company").ToList();
 
             foreach (var user in objUserList)
             {
-                var roleId = userRoles.FirstOrDefault(u => u.UserId == user.Id).RoleId;
-                user.Role = roles.FirstOrDefault(u => u.Id == roleId).Name;
+                user.Role = _userManager.GetRolesAsync(user).GetAwaiter().GetResult().FirstOrDefault();
 
                 if (user.Company == null)
                 {
@@ -105,7 +113,7 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
         [HttpPost]
         public IActionResult LockUnlock([FromBody] string id)
         {
-            var objFromDb = _db.ApplicationUsers.FirstOrDefault(u => u.Id == id);
+            var objFromDb = _unitOfWork.ApplicationUser.Get(u => u.Id == id);
             if (objFromDb == null)
             {
                 return Json(new { success = false, message = "Error while Locking/Unlocking" });
@@ -119,7 +127,8 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
             {
                 objFromDb.LockoutEnd = DateTime.Now.AddYears(1000);
             }
-            _db.SaveChanges();
+            _unitOfWork.ApplicationUser.Update(objFromDb);
+            _unitOfWork.Save();
 
             return Json(new { success = true, message = "Operation Successful" });
         }
