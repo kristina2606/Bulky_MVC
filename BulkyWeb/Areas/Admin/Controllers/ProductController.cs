@@ -10,7 +10,7 @@ using System.Data;
 namespace BulkyBookWeb.Areas.Admin.Controllers
 {
     [Area("Admin")]
-    [Authorize(Roles = SD.Role_Admin)] 
+    [Authorize(Roles = SD.Role_Admin)]
     public class ProductController : Controller
     {
         private readonly IUnitOfWork _unitOfWork;
@@ -50,35 +50,12 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
             }
         }
         [HttpPost]
-        public IActionResult Upsert(ProductVM productVM, IFormFile? file)
+        public IActionResult Upsert(ProductVM productVM, List<IFormFile> files)
         {
             var message = "Company created successfully";
 
             if (ModelState.IsValid)
             {
-                string wwwRootPath = _webHostEnvironment.WebRootPath;
-                //if (file != null)
-                //{
-                //    string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
-                //    string productPath = Path.Combine(wwwRootPath, @"images\product");
-
-                //    if (!string.IsNullOrEmpty(productVM.Product.ImageUrl))
-                //    {
-                //        var oldImage = Path.Combine(wwwRootPath, productVM.Product.ImageUrl.TrimStart('\\'));
-
-                //        if (System.IO.File.Exists(oldImage))
-                //        {
-                //            System.IO.File.Delete(oldImage);
-                //        }
-                //    }
-
-                //    using (var fs = new FileStream(Path.Combine(productPath, fileName), FileMode.Create))
-                //    {
-                //        file.CopyTo(fs);
-                //    }
-
-                //    productVM.Product.ImageUrl = @"\images\product\" + fileName;
-                //}
 
                 if (productVM.Product.Id == 0)
                 {
@@ -90,6 +67,46 @@ namespace BulkyBookWeb.Areas.Admin.Controllers
                     message = "Company updated successfully";
                 }
                 _unitOfWork.Save();
+
+
+                string wwwRootPath = _webHostEnvironment.WebRootPath;
+                if (files != null)
+                {
+
+                    foreach (IFormFile file in files)
+                    {
+                        string fileName = Guid.NewGuid().ToString() + Path.GetExtension(file.FileName);
+                        string productPath = @"images\product\product-" + productVM.Product.Id;
+                        string finalPath = Path.Combine(wwwRootPath, productPath);
+                        if (!Directory.Exists(finalPath))
+                        {
+                            Directory.CreateDirectory(finalPath);
+                        }
+
+                        using (var fs = new FileStream(Path.Combine(finalPath, fileName), FileMode.Create))
+                        {
+                            file.CopyTo(fs);
+                        }
+
+                        ProductImage productImage = new()
+                        {
+                            ImageUrl = @"\" + productPath + @"\" + fileName,
+                            ProductId = productVM.Product.Id,
+                        };
+
+                        if (productVM.Product.ProductImages == null)
+                        {
+                            productVM.Product.ProductImages = new List<ProductImage>();
+                        }
+
+                        productVM.Product.ProductImages.Add(productImage);
+                    }
+
+                    _unitOfWork.Product.Update(productVM.Product);
+                    _unitOfWork.Save();
+                }
+
+
                 TempData["success"] = message;
                 return RedirectToAction("Index");
             }

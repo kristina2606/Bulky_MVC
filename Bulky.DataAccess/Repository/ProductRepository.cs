@@ -26,6 +26,7 @@ namespace BulkyBook.DataAccess.Repository
                 objFromDb.Description = obj.Description;
                 objFromDb.Author = obj.Author;
                 objFromDb.CategoryId = obj.CategoryId;
+                objFromDb.ProductImages=obj.ProductImages;
             }
         }
     }
