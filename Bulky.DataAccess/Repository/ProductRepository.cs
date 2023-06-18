@@ -26,10 +26,6 @@ namespace BulkyBook.DataAccess.Repository
                 objFromDb.Description = obj.Description;
                 objFromDb.Author = obj.Author;
                 objFromDb.CategoryId = obj.CategoryId;
-                if(obj.ImageUrl!=null)
-                {
-                    objFromDb.ImageUrl = obj.ImageUrl;
-                }
             }
         }
     }
