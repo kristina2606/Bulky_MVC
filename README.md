@@ -16,7 +16,7 @@ Admin password: Admin123*
 - Company Users
 - Cuctomer
 
-# Display User Interface
+## Display User Interface
 --------------------------------------------------------
 ### Registration page where data is validated. User can register himself or use Facebook or Microsoft. The same situation when the user wants to log in
 
