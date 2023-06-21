@@ -1,5 +1,5 @@
 # BulkyBook
- ASP NET MVC Core (.NET 8), ASP NET Core (.NET 8) Razor Project, Dependency Injection, Entity Framework Core, SQL Server, CRUD Operations. 
+ASP.NET Core MVC (.NET 8), Dependency Injection, Entity Framework Core, SQL Server, ASP.NET Core Identity. 
 ## Overview
 --------------------------------------------------------
 Bulky Book is an online store where users can view product information, register/login using Facebook and Microsoft, add products to cart, place an order, receive discounts and make payments. Users can place an order as a company or as an individual user.
