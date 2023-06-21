@@ -22,13 +22,11 @@ Admin password: Admin123*
 
 
 ![Register page](Screenshots/Register.png)
-![Login page](Screenshots/Login.png)
 
 ### Home Screen displays list of products and link to view individual product details
 
 
 ![Home page Customer](Screenshots/Home_Page_(Customer).png)
-![Home page Admin](Screenshots/Home_Page_(Admin).png)
 
 ### Users can see the details of the product, i.e. all its images, description, prices with different discounts, etc
 
