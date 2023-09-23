@@ -363,5 +363,6 @@ MigrationBackup/
 FodyWeavers.xsd
 
 #My Secret
-secrets.json
-appsettings.Production.json
+BulkyWeb/secrets.json
+BulkyWeb/appsetting.Production.json
+
